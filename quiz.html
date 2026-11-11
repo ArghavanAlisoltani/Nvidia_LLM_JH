@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Protein Language Models - Quiz</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <h1>🧬 Protein Language Models</h1>
+    <nav class="breadcrumb">
+      <a href="index.html">1. Amino Acid Sequences</a>
+      <a href="embeddings.html">2. Protein Embeddings</a>
+      <a href="similarity.html">3. Cosine Similarity</a>
+      <a href="quiz.html" class="active">Quiz</a>
+      <a href="tutor.html">🤖 Socratic Tutor</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <section class="lesson-header">
+    <h2>Quiz: Test Your Understanding</h2>
+    <p class="lesson-meta">5 questions covering all three lessons | No time limit</p>
+  </section>
+
+  <form class="content-card quiz-card quiz-form" id="quiz-form">
+    <div class="quiz-question">
+      <h4>1. A protein sequence "MALWMRLLPLL" uses one-letter codes. What does the "M" at the start represent?</h4>
+      <div class="quiz-options">
+        <label class="quiz-option"><input type="radio" name="q1" value="a"> Methionine — the start amino acid in most proteins</label>
+        <label class="quiz-option"><input type="radio" name="q1" value="b" data-correct="true"> Methionine — encoded by the start codon AUG</label>
+        <label class="quiz-option"><input type="radio" name="q1" value="c"> Methylation — a post-translational modification</label>
+        <label class="quiz-option"><input type="radio" name="q1" value="d"> Mass — the molecular weight of the protein</label>
+      </div>
+      <div class="quiz-feedback correct"><strong>Correct!</strong> Methionine (M) is encoded by the start codon AUG and is the first amino acid in almost all proteins.</div>
+      <div class="quiz-feedback incorrect"><strong>Not quite.</strong> M stands for Methionine, which is encoded by the start codon AUG and initiates translation in nearly all organisms.</div>
+    </div>
+
+    <div class="quiz-question">
+      <h4>2. Why do protein language models use learned embeddings instead of one-hot encoding?</h4>
+      <div class="quiz-options">
+        <label class="quiz-option"><input type="radio" name="q2" value="a"> One-hot vectors are too short (only 20 dimensions)</label>
+        <label class="quiz-option"><input type="radio" name="q2" value="b" data-correct="true"> Learned embeddings place chemically similar amino acids close in vector space</label>
+        <label class="quiz-option"><input type="radio" name="q2" value="c"> One-hot encoding cannot represent sequences longer than 20 amino acids</label>
+        <label class="quiz-option"><input type="radio" name="q2" value="d"> Learned embeddings are faster to compute than one-hot</label>
+      </div>
+      <div class="quiz-feedback correct"><strong>Correct!</strong> The key advantage is that learned embeddings capture biochemical similarity — Leucine and Isoleucine end up with similar vectors because they appear in similar contexts.</div>
+      <div class="quiz-feedback incorrect"><strong>Not quite.</strong> One-hot treats all 20 amino acids as equally different. Learned embeddings capture that hydrophobic amino acids like L and I are biochemically similar.</div>
+    </div>
+
+    <div class="quiz-question">
+      <h4>3. What does "mean pooling" do to a protein's per-position embeddings?</h4>
+      <div class="quiz-options">
+        <label class="quiz-option"><input type="radio" name="q3" value="a"> Takes the embedding of the first amino acid only</label>
+        <label class="quiz-option"><input type="radio" name="q3" value="b" data-correct="true"> Averages all position vectors into a single fixed-size protein embedding</label>
+        <label class="quiz-option"><input type="radio" name="q3" value="c"> Selects the maximum value at each dimension across positions</label>
+        <label class="quiz-option"><input type="radio" name="q3" value="d"> Concatenates all position vectors into one long vector</label>
+      </div>
+      <div class="quiz-feedback correct"><strong>Correct!</strong> Mean pooling computes the element-wise average across all residue embeddings, producing one vector representing the whole protein.</div>
+      <div class="quiz-feedback incorrect"><strong>Not quite.</strong> Mean pooling averages all per-position vectors (element-wise) to create a single protein-level embedding of fixed size.</div>
+    </div>
+
+    <div class="quiz-question">
+      <h4>4. Two protein embeddings have a cosine similarity of 0.85. What is the most reasonable interpretation?</h4>
+      <div class="quiz-options">
+        <label class="quiz-option"><input type="radio" name="q4" value="a"> The proteins have 85% identical amino acid sequences</label>
+        <label class="quiz-option"><input type="radio" name="q4" value="b" data-correct="true"> The proteins are likely homologs with similar structure and function</label>
+        <label class="quiz-option"><input type="radio" name="q4" value="c"> The proteins have exactly the same 3D structure</label>
+        <label class="quiz-option"><input type="radio" name="q4" value="d"> The proteins are 85% similar in molecular weight</label>
+      </div>
+      <div class="quiz-feedback correct"><strong>Correct!</strong> High cosine similarity (0.85) suggests the proteins are likely homologs — they share evolutionary ancestry and often similar structure/function. It does NOT equal sequence identity percentage.</div>
+      <div class="quiz-feedback incorrect"><strong>Not quite.</strong> Cosine similarity measures embedding vector alignment, not sequence identity. 0.85 indicates likely homology, not 85% sequence identity.</div>
+    </div>
+
+    <div class="quiz-question">
+      <h4>5. Why is cosine similarity preferred over Euclidean distance for protein embeddings?</h4>
+      <div class="quiz-options">
+        <label class="quiz-option"><input type="radio" name="q5" value="a"> Cosine similarity is easier to calculate</label>
+        <label class="quiz-option"><input type="radio" name="q5" value="b" data-correct="true"> Cosine similarity is scale-invariant and works better in high dimensions</label>
+        <label class="quiz-option"><input type="radio" name="q5" value="c"> Euclidean distance gives negative values for similar proteins</label>
+        <label class="quiz-option"><input type="radio" name="q5" value="d"> Cosine similarity captures magnitude differences which are biologically important</label>
+      </div>
+      <div class="quiz-feedback correct"><strong>Correct!</strong> Cosine similarity ignores vector magnitude (scale-invariant) and remains discriminative in high-dimensional embedding spaces where Euclidean distance suffers from the "curse of dimensionality."</div>
+      <div class="quiz-feedback incorrect"><strong>Not quite.</strong> The key advantages are scale invariance and better behavior in high dimensions. Magnitude is typically not biologically meaningful in normalized embeddings.</div>
+    </div>
+
+    <div class="quiz-actions">
+      <button type="button" class="btn btn-primary quiz-submit">Submit Answers</button>
+      <button type="button" class="btn btn-secondary quiz-retry" style="display:none;">Try Again</button>
+    </div>
+
+    <div class="quiz-score" style="display:none;">
+      <h3>Your Score</h3>
+      <div class="score">0/5</div>
+      <p>Review the lessons above for any questions you missed!</p>
+    </div>
+  </form>
+
+  <section class="content-card">
+    <h3>📚 Review the Lessons</h3>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:16px;">
+      <a href="index.html" class="btn btn-secondary">Lesson 1: Amino Acid Sequences</a>
+      <a href="embeddings.html" class="btn btn-secondary">Lesson 2: Protein Embeddings</a>
+      <a href="similarity.html" class="btn btn-secondary">Lesson 3: Cosine Similarity</a>
+    </div>
+  </section>
+
+  <section class="content-card">
+    <h3>🎯 Socratic Practice Questions</h3>
+    <p>These questions don't have right/wrong answers — they're for deepening your understanding. Click "Get a hint" for guidance.</p>
+    <div class="socratic" data-question="practice-1">
+      <p>If you were designing a protein language model, would you train it on all known protein sequences or only on experimentally verified structures? Why?</p>
+    </div>
+    <div class="socratic" data-question="practice-2">
+      <p>A protein embedding model gives cosine similarity of 0.6 between a human enzyme and a bacterial enzyme. They have different functions. What might explain this?</p>
+    </div>
+    <div class="socratic" data-question="practice-3">
+      <p>You have a new protein sequence with no known homologs. How could you use a protein language model to hypothesize its function?</p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>Protein Language Models Tutorial | <a href="https://github.com/ArghavanAlisoltani/Nvidia_LLM_JH" target="_blank">GitHub Repository</a></p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+<script src="socratic.js" defer></script>
+<script>
+  if (window.SocraticTutor) {
+    window.SocraticTutor.registerQuestions({
+      "practice-1": {
+        question: "If you were designing a protein language model, would you train it on all known protein sequences or only on experimentally verified structures? Why?",
+        answer: "Train on all sequences (UniRef, etc.) — there are ~200M+ sequences but only ~200K structures. Sequence data captures evolutionary patterns at massive scale. Structure data is higher quality but far too limited for learning general protein 'language'. Best models (ESM, ProtBERT) use sequence-only pretraining, optionally fine-tuned on structure.",
+        misconceptions: ["Structure data is always better", "You need 3D coordinates to learn protein properties", "Sequence-only models can't predict structure"]
+      },
+      "practice-2": {
+        question: "A protein embedding model gives cosine similarity of 0.6 between a human enzyme and a bacterial enzyme. They have different functions. What might explain this?",
+        answer: "0.6 indicates moderate similarity — possibly same fold (structural homology) but divergent function. Common scenarios: (1) Same ancestral protein, different substrates (divergent evolution), (2) Convergent evolution to similar fold, (3) Embedding captures structural more than functional similarity, (4) Multi-domain proteins where only one domain aligns.",
+        misconceptions: ["0.6 means they're the same protein", "Different function = unrelated", "Embeddings perfectly predict function"]
+      },
+      "practice-3": {
+        question: "You have a new protein sequence with no known homologs. How could you use a protein language model to hypothesize its function?",
+        answer: "Approaches: (1) Embed the sequence, find nearest neighbors in embedding space from annotated databases — 'guilt by association'. (2) Use the per-position embeddings to predict structural properties (secondary structure, disorder, binding sites). (3) Mask key positions and see what the model predicts — reveals evolutionary constraints. (4) Compare embedding to known functional clusters (e.g., kinase-like, transporter-like).",
+        misconceptions: ["No homologs means no prediction possible", "The model will just tell you the function directly", "BLAST is always better than embeddings for this"]
+      }
+    });
+  }
+</script>

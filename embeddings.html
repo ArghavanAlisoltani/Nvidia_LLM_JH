@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Protein Language Models - Lesson 2: Protein Embeddings</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <h1>🧬 Protein Language Models</h1>
+    <nav class="breadcrumb">
+      <a href="index.html">1. Amino Acid Sequences</a>
+      <a href="embeddings.html" class="active">2. Protein Embeddings</a>
+      <a href="similarity.html">3. Cosine Similarity</a>
+      <a href="quiz.html">Quiz</a>
+      <a href="tutor.html">🤖 Socratic Tutor</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <section class="lesson-header">
+    <h2>Lesson 2: Protein Embeddings — From Letters to Numbers</h2>
+    <p class="lesson-meta">📚 For beginner bioinformatics students | ⏱️ ~12 minutes</p>
+  </section>
+
+  <section class="content-card">
+    <h3>The Problem: Computers Don't Read Letters</h3>
+    <p>We can write a protein as <code>MALWMRLLPLL...</code>, but machine learning models need <strong>numbers</strong>. How do we convert a sequence of letters into meaningful numerical representations?</p>
+    <p>This is exactly what <strong>protein language models (pLMs)</strong> do — they learn to map amino acid sequences to dense vectors (lists of numbers) that capture biological meaning.</p>
+  </section>
+
+  <section class="content-card">
+    <h3>From One-Hot to Embeddings</h3>
+    <p><strong>One-hot encoding</strong> is the simplest approach: each amino acid becomes a vector of length 20 with a single 1 and nineteen 0s.</p>
+    <div class="embedding-viz">
+      <pre class="vector-display"><span class="vector-label"># One-hot for Alanine (A)</span>
+[<span class="vector-value">1</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>]
+<span class="vector-label"># One-hot for Leucine (L)</span>
+[<span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-value">1</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>, <span class="vector-dim">0</span>]</pre>
+    </div>
+    <p><strong>Problem:</strong> One-hot vectors are sparse (mostly zeros), high-dimensional, and — crucially — they treat every amino acid as equally different from every other. The model learns nothing about chemical similarity.</p>
+  </section>
+
+  <section class="content-card">
+    <h3>Learned Embeddings: Dense &amp; Meaningful</h3>
+    <p>Protein language models (like ESM, ProtBERT, Ankh) learn <strong>dense embeddings</strong> — vectors of 320–4096 dimensions where <strong>similar amino acids have similar vectors</strong>.</p>
+    <div class="callout">
+      <strong>Key idea:</strong> The model reads millions of protein sequences and learns that Leucine (L) and Isoleucine (I) often appear in similar contexts (hydrophobic cores), so their embeddings end up close together in vector space.
+    </div>
+    <p>Each amino acid gets a learned vector (e.g., 320 numbers). A protein sequence becomes a <strong>matrix</strong> of shape <code>(sequence_length × embedding_dim)</code>.</p>
+  </section>
+
+  <section class="content-card interactive">
+    <h3>🔬 Interactive: See Embeddings in Action</h3>
+    <p>Below is a simplified demo (16 dimensions) showing how a pLM might embed the sequence "MALW". Real models use 320–4096 dimensions.</p>
+    <div class="embedding-viz" id="embedding-demo"></div>
+    <p class="caption">Each row shows one amino acid's embedding vector. The last row shows the mean-pooled protein-level representation.</p>
+  </section>
+
+  <section class="content-card">
+    <h3>From Residue Embeddings to Protein Embeddings</h3>
+    <p>A protein language model outputs one vector <strong>per position</strong> in the sequence. To get a single vector for the whole protein, we <strong>pool</strong> (aggregate) them:</p>
+    <ul>
+      <li><strong>Mean pooling:</strong> Average all position vectors → most common</li>
+      <li><strong>CLS token:</strong> Special start token that attends to the whole sequence (like BERT)</li>
+      <li><strong>Max pooling:</strong> Element-wise maximum across positions</li>
+    </ul>
+    <p>The resulting <strong>protein embedding</strong> is a fixed-size vector (e.g., 1280 dimensions for ESM-2) that represents the entire protein.</p>
+  </section>
+
+  <section class="content-card">
+    <h3>What Do Embeddings Capture?</h3>
+    <p>Remarkably, protein embeddings capture biological properties without explicit supervision:</p>
+    <ul>
+      <li><strong>Secondary structure:</strong> Helix/strand/loop propensities</li>
+      <li><strong>Physicochemical properties:</strong> Hydrophobicity, charge, size</li>
+      <li><strong>Functional sites:</strong> Active sites, binding pockets</li>
+      <li><strong>Evolutionary relationships:</strong> Homologous proteins cluster together</li>
+      <li><strong>Mutation effects:</strong> Embedding changes predict variant pathogenicity</li>
+    </ul>
+    <div class="callout">
+      <strong>Analogy:</strong> Just as word embeddings (Word2Vec, GloVe) place "king" − "man" + "woman" ≈ "queen", protein embeddings can capture relationships like "wild-type" + "mutation effect" ≈ "variant".
+    </div>
+  </section>
+
+  <section class="content-card">
+    <h3>🎯 Mini-Check</h3>
+    <div class="socratic" data-question="emb-1">
+      <p>Why are learned embeddings better than one-hot encoding for protein sequences?</p>
+    </div>
+    <div class="socratic" data-question="emb-2">
+      <p>If you average all the per-position embeddings of a protein (mean pooling), what does the resulting vector represent?</p>
+    </div>
+  </section>
+
+  <nav class="lesson-nav">
+    <a href="index.html" class="btn btn-secondary">← Previous: Amino Acid Sequences</a>
+    <a href="similarity.html" class="btn btn-primary">Next: Cosine Similarity →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>Protein Language Models Tutorial | <a href="https://github.com/ArghavanAlisoltani/Nvidia_LLM_JH" target="_blank">GitHub Repository</a></p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+<script src="socratic.js" defer></script>
+<script>
+  if (window.SocraticTutor) {
+    window.SocraticTutor.registerQuestions({
+      "emb-1": {
+        question: "Why are learned embeddings better than one-hot encoding for protein sequences?",
+        answer: "Learned embeddings are dense (not sparse), lower-dimensional, and — most importantly — they place chemically similar amino acids (like Leucine and Isoleucine) close together in vector space because the model sees them in similar sequence contexts during training. One-hot treats all amino acids as equally different.",
+        misconceptions: ["Embeddings are just compressed one-hot vectors", "One-hot is fine because it preserves all information", "Embeddings lose information compared to one-hot"]
+      },
+      "emb-2": {
+        question: "If you average all the per-position embeddings of a protein (mean pooling), what does the resulting vector represent?",
+        answer: "A single fixed-size vector representing the entire protein — a 'protein embedding'. It summarizes the sequence's overall biochemical and evolutionary properties. This vector can be used for downstream tasks like similarity search, function prediction, or structure prediction.",
+        misconceptions: ["It represents only the first amino acid", "It loses all positional information", "Mean pooling is the same as taking the CLS token"]
+      }
+    });
+  }
+</script>

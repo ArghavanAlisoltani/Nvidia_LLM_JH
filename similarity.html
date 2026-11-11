@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Protein Language Models - Lesson 3: Cosine Similarity</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <h1>🧬 Protein Language Models</h1>
+    <nav class="breadcrumb">
+      <a href="index.html">1. Amino Acid Sequences</a>
+      <a href="embeddings.html">2. Protein Embeddings</a>
+      <a href="similarity.html" class="active">3. Cosine Similarity</a>
+      <a href="quiz.html">Quiz</a>
+      <a href="tutor.html">🤖 Socratic Tutor</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <section class="lesson-header">
+    <h2>Lesson 3: Cosine Similarity — Measuring Protein Relatedness</h2>
+    <p class="lesson-meta">📚 For beginner bioinformatics students | ⏱️ ~10 minutes</p>
+  </section>
+
+  <section class="content-card">
+    <h3>The Question: How Similar Are Two Proteins?</h3>
+    <p>We now have protein embeddings — fixed-size vectors representing entire proteins. But how do we compare them? We need a <strong>similarity metric</strong>.</p>
+    <p>The most common choice in protein language models is <strong>cosine similarity</strong>.</p>
+  </section>
+
+  <section class="content-card">
+    <h3>What Is Cosine Similarity?</h3>
+    <p>Cosine similarity measures the <strong>cosine of the angle</strong> between two vectors:</p>
+    <div class="embedding-viz">
+      <pre class="vector-display"><span class="vector-label">cosine_similarity(A, B) = (A · B) / (||A|| × ||B||)</span>
+<span class="vector-label">           = Σ(Aᵢ × Bᵢ) / (√ΣAᵢ² × √ΣBᵢ²)</span>
+
+<span class="vector-label"># Range: -1 to 1</span>
+<span class="vector-label">#  1.0 = identical direction (same protein)</span>
+<span class="vector-label">#  0.0 = orthogonal (unrelated)</span>
+<span class="vector-label"># -1.0 = opposite direction (rare in practice)</span></pre>
+    </div>
+    <p><strong>Key property:</strong> Cosine similarity ignores vector magnitude (length) and only cares about <strong>direction</strong>. This is perfect for embeddings because we care about the <em>pattern</em> of the protein, not how "strongly" it's expressed.</p>
+  </section>
+
+  <section class="content-card">
+    <h3>Why Cosine, Not Euclidean Distance?</h3>
+    <ul>
+      <li><strong>Scale-invariant:</strong> Multiplying an embedding by 2 doesn't change cosine similarity</li>
+      <li><strong>High-dimensional friendly:</strong> In high dimensions, Euclidean distances become less discriminative</li>
+      <li><strong>Standard in NLP/pLMs:</strong> Word/protein embeddings are typically normalized to unit length</li>
+      <li><strong>Interpretable:</strong> 0.9 = very similar, 0.5 = moderate, 0.1 = dissimilar</li>
+    </ul>
+    <div class="callout">
+      <strong>Practical note:</strong> Most protein language models (ESM, ProtBERT) output embeddings that are already normalized or work best with cosine similarity. Always check the model's documentation!
+    </div>
+  </section>
+
+  <section class="content-card interactive">
+    <h3>🔬 Interactive: Compare Protein Embeddings</h3>
+    <p>Select a protein pair to see their simulated cosine similarity. Real embeddings would come from models like ESM-2 or Ankh.</p>
+    <div class="similarity-demo" id="similarity-demo"></div>
+  </section>
+
+  <section class="content-card">
+    <h3>Real-World Applications</h3>
+    <p>Cosine similarity on protein embeddings powers many bioinformatics tasks:</p>
+    <ul>
+      <li><strong>Homology search:</strong> Find evolutionary relatives faster than BLAST</li>
+      <li><strong>Function prediction:</strong> "Guilt by association" — similar embedding → similar function</li>
+      <li><strong>Protein design:</strong> Optimize sequences to match a target embedding</li>
+      <li><strong>Variant effect prediction:</strong> Small embedding change → likely benign; large change → possibly pathogenic</li>
+      <li><strong>Clustering:</strong> Group protein families without alignment</li>
+    </ul>
+  </section>
+
+  <section class="content-card">
+    <h3>Interpreting Similarity Scores</h3>
+    <div class="embedding-viz">
+      <pre class="vector-display"><span class="vector-label">Cosine Similarity    | Interpretation</span>
+<span class="vector-label">---------------------|--------------------------------</span>
+<span class="vector-value">0.90 – 1.00</span>       <span class="vector-label">| Nearly identical / same protein</span>
+<span class="vector-value">0.70 – 0.90</span>       <span class="vector-label">| Close homologs, same family</span>
+<span class="vector-value">0.50 – 0.70</span>       <span class="vector-label">| Distant homologs, same fold</span>
+<span class="vector-value">0.30 – 0.50</span>       <span class="vector-label">| Possible remote homology</span>
+<span class="vector-value">0.00 – 0.30</span>       <span class="vector-label">| Likely unrelated</span>
+<span class="vector-value"><span class="vector-dim">&lt; 0.00</span></span>       <span class="vector-label">| Opposite (very rare for proteins)</span></pre>
+    </div>
+    <p><strong>Caveat:</strong> Thresholds depend on the model, embedding dimension, and task. Always calibrate on your specific data!</p>
+  </section>
+
+  <section class="content-card">
+    <h3>🎯 Mini-Check</h3>
+    <div class="socratic" data-question="sim-1">
+      <p>Two protein embeddings have cosine similarity of 0.95. What does this tell you? What does it NOT tell you?</p>
+    </div>
+    <div class="socratic" data-question="sim-2">
+      <p>Why is cosine similarity preferred over Euclidean distance for comparing protein embeddings?</p>
+    </div>
+  </section>
+
+  <nav class="lesson-nav">
+    <a href="embeddings.html" class="btn btn-secondary">← Previous: Protein Embeddings</a>
+    <a href="quiz.html" class="btn btn-primary">Quiz: Test Your Knowledge →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>Protein Language Models Tutorial | <a href="https://github.com/ArghavanAlisoltani/Nvidia_LLM_JH" target="_blank">GitHub Repository</a></p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+<script src="socratic.js" defer></script>
+<script>
+  if (window.SocraticTutor) {
+    window.SocraticTutor.registerQuestions({
+      "sim-1": {
+        question: "Two protein embeddings have cosine similarity of 0.95. What does this tell you? What does it NOT tell you?",
+        answer: "It tells you the proteins have very similar embedding directions — likely same family, similar function, or homologous. It does NOT tell you: exact sequence identity %, whether they have identical 3D structures, whether the similarity is functionally meaningful, or the statistical significance (depends on embedding dimension and model).",
+        misconceptions: ["0.95 means 95% sequence identity", "High cosine similarity guarantees identical function", "Cosine similarity of 0.95 is the same across all models"]
+      },
+      "sim-2": {
+        question: "Why is cosine similarity preferred over Euclidean distance for comparing protein embeddings?",
+        answer: "Cosine similarity is scale-invariant (ignores magnitude), works better in high dimensions, matches how embedding models are trained (often with cosine loss), and is interpretable as angular similarity. Euclidean distance is sensitive to vector magnitude and suffers from the 'curse of dimensionality' where all distances become similar in high dimensions.",
+        misconceptions: ["Euclidean distance is more intuitive", "Cosine and Euclidean give the same rankings", "Magnitude carries important information in embeddings"]
+      }
+    });
+  }
+</script>

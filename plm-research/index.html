@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protein Language Models: Scaling, Structure, and Function</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        :root {
+            --bg: #0d1117;
+            --bg-elevated: #161b22;
+            --fg: #e6edf3;
+            --fg-muted: #8b949e;
+            --accent: #58a6ff;
+            --accent-dim: #388bfd;
+            --green: #3fb950;
+            --amber: #d29922;
+            --red: #f85149;
+            --border: #30363d;
+            --card-bg: #1c2128;
+            --code-bg: #0d1117;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .presentation {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .slides-container {
+            flex: 1;
+            display: flex;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        .slide {
+            flex: 0 0 100%;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 4rem 6rem;
+            transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            z-index: 10;
+            transform: translateX(0);
+        }
+        
+        .slide.prev {
+            transform: translateX(-100%);
+        }
+        
+        .slide.next {
+            transform: translateX(100%);
+        }
+        
+        .slide-number {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            color: var(--fg-muted);
+            z-index: 100;
+        }
+        
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--green));
+            z-index: 100;
+            transition: width 0.3s ease;
+        }
+        
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        h2 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }
+        
+        h3 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            line-height: 1.3;
+            margin-bottom: 0.75rem;
+        }
+        
+        p {
+            font-size: 1.25rem;
+            line-height: 1.6;
+            color: var(--fg-muted);
+            max-width: 80ch;
+        }
+        
+        .subtitle {
+            font-size: 1.5rem;
+            color: var(--fg-muted);
+            font-weight: 400;
+            margin-bottom: 2rem;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 1200px;
+            margin-top: 2rem;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+        
+        .card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+        
+        .card-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            font-weight: 500,
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .card-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        
+        .card-desc {
+            font-size: 1rem;
+            color: var(--fg-muted);
+        }
+        
+        .card-value.green { color: var(--green); }
+        .card-value.amber { color: var(--amber); }
+        .card-value.blue { color: var(--accent); }
+        .card-value.red { color: var(--red); }
+        
+        table {
+            width: 100%;
+            max-width: 1000px;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+            font-size: 1rem;
+        }
+        
+        th, td {
+            padding: 0.875rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        th {
+            font-weight: 600;
+            color: var(--accent);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        td {
+            color: var(--fg);
+        }
+        
+        tr:hover td {
+            background: rgba(88, 166, 255, 0.05);
+        }
+        
+        .highlight {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        
+        .source {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--fg-muted);
+            margin-top: 2rem;
+        }
+        
+        .key-point {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+        
+        .key-point::before {
+            content: '▸';
+            color: var(--green);
+            font-weight: bold;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+        
+        .key-point.caution::before {
+            content: '⚠';
+            color: var(--amber);
+        }
+        
+        .flagged {
+            color: var(--amber);
+            font-style: italic;
+        }
+        
+        .nav-hint {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem,
+            color: var(--fg-muted);
+            display: flex;
+            gap: 1.5rem;
+        }
+        
+        .nav-hint kbd {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0.25rem 0.5rem;
+            font-family: inherit;
+            font-size: inherit;
+        }
+        
+        @media (max-width: 768px) {
+            .slide { padding: 2rem 1.5rem; }
+            h1 { font-size: 2.5rem; }
+            h2 { font-size: 1.75rem; }
+            h3 { font-size: 1.5rem; }
+            p { font-size: 1.1rem; }
+            .card-value { font-size: 2rem; }
+            .nav-hint { display: none; }
+        }
+        
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            width: 100%;
+            max-width: 1200px;
+            margin-top: 2rem;
+        }
+        
+        @media (max-width: 900px) {
+            .two-col { grid-template-columns: 1fr; }
+        }
+        
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .metric-label { color: var(--fg-muted); }
+        .metric-value { font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+        
+        /* Agentic loop styles */
+        .loop-step {
+            display: flex;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            position: relative;
+        }
+        
+        .loop-step::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 3px solid var(--bg);
+        }
+        
+        .loop-step.hypothesis::before { background: var(--amber); }
+        .loop-step.evidence::before { background: var(--green); }
+        .loop-step.contradiction::before { background: var(--red); }
+        .loop-step.revision::before { background: var(--accent); }
+        
+        .loop-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent);
+            min-width: 120px;
+            margin-top: 0.25rem;
+        }
+        
+        .loop-step.hypothesis .loop-label { color: var(--amber); }
+        .loop-step.evidence .loop-label { color: var(--green); }
+        .loop-step.contradiction .loop-label { color: var(--red); }
+        .loop-step.revision .loop-label { color: var(--accent); }
+        
+        .loop-content { flex: 1; }
+        .loop-content h4 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .loop-content p { font-size: 1rem; color: var(--fg-muted); margin: 0; }
+        
+        .loop-arrow {
+            display: none;
+        }
+        
+        @media (min-width: 900px) {
+            .loop-arrow {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 2rem;
+                color: var(--fg-muted);
+                margin: 0 1rem;
+            }
+        }
+        
+        /* Hypothesis box */
+        .hypothesis-box {
+            border: 2px dashed var(--amber);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            background: rgba(210, 153, 34, 0.05);
+            max-width: 1000px;
+        }
+        
+        .hypothesis-box h3 {
+            color: var(--amber);
+            margin-bottom: 1rem;
+        }
+        
+        .hypothesis-box .hypothesis-text {
+            font-size: 1.25rem;
+            line-height: 1.6;
+            color: var(--fg);
+            font-style: italic;
+        }
+        
+        .experiment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+            max-width: 1000px;
+        }
+        
+        .experiment-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+        }
+        
+        .experiment-card h4 {
+            font-size: 1rem;
+            color: var(--accent);
+            margin-bottom: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.75rem;
+        }
+        
+        .experiment-card ul {
+            margin: 0;
+            padding-left: 1.25rem;
+            font-size: 0.95rem;
+            color: var(--fg-muted);
+        }
+        
+        .experiment-card li { margin: 0.4rem 0; }
+    </style>
+</head>
+<body>
+    <div class="presentation">
+        <div class="progress-bar" id="progressBar" style="width: 20%"></div>
+        <div class="slides-container" id="slidesContainer">
+            
+            <!-- Slide 1: Title -->
+            <div class="slide active" data-slide="1">
+                <h1>Protein Language Models</h1>
+                <p class="subtitle">Scaling Laws, Structure Prediction, and Functional Inference</p>
+                <p style="margin-top: 2rem; font-size: 1.1rem; max-width: 60ch;">
+                    A synthesis of five major PLM families spanning four orders of magnitude in parameter count, 
+                    evaluated on structure prediction, secondary structure, contact prediction, and zero-shot fitness landscapes.
+                </p>
+                <div class="source">Data from: Ankh, ESM-2, ESMFold, ProGen2, ESM3, ProtTrans benchmarks</div>
+            </div>
+            
+            <!-- Slide 2: Model Scaling Landscape -->
+            <div class="slide" data-slide="2">
+                <h2>Model Scaling Landscape</h2>
+                <p>PLM families exhibit performance-proportional scaling across four orders of magnitude.</p>
+                
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-title">RITA Family</div>
+                        <div class="card-value blue">85M → 1.2B</div>
+                        <div class="card-desc">4 models; size increases proportionally to performance <span class="flagged">(unit mismatch flagged in source: 1.2B vs 1200M)</span> [Ankh p.2]</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">ESM-2 Family</div>
+                        <div class="card-value blue">650M → 15B</div>
+                        <div class="card-desc">3 main checkpoints + 8M–15B continuum <span class="flagged">(unit mismatch flagged: 15B vs 15000M)</span> [ESM-2 p.4]</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">ProGen2 Family</div>
+                        <div class="card-value blue">Up to 6.4B</div>
+                        <div class="card-desc">5 variants trained on different sequence datasets [Ankh p.2]</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Perplexity Range</div>
+                        <div class="card-value amber">10.45 → 6.37</div>
+                        <div class="card-desc">ESM-2 8M vs 15B; ~39% improvement with scale [ESM-2 p.4]</div>
+                    </div>
+                </div>
+                
+                <div class="key-point" style="max-width: 1000px; margin-top: 2rem;">
+                    <div>Scaling consistently improves protein sequence understanding across all families — from 8M to 15B parameters, perplexity drops ~39% (ESM-2) and downstream tasks show monotonic gains.</div>
+                </div>
+                
+                <div class="key-point" style="max-width: 1000px;">
+                    <div>Training data diversity matters: ProGen2 variants use different sequence datasets; ESM-2 uses broad UniRef; RITA focuses on specific families. Performance reflects both scale and data.</div>
+                </div>
+                
+                <div class="source">Sources: Ankh p.2 (RITA, ProGen2, ESM-2 model sizes); ESM-2 p.4 (perplexity scaling). Flagged items: RITA 1.2B/1200M unit mismatch; ESM-2 15B/15000M unit mismatch.</div>
+            </div>
+            
+            <!-- Slide 3: Structure Prediction -->
+            <div class="slide" data-slide="3">
+                <h2>Structure Prediction Performance</h2>
+                <p>Large PLMs now rival dedicated structure predictors on single-sequence tasks — but benchmark comparability varies.</p>
+                
+                <div class="two-col">
+                    <div>
+                        <h3>Single-Sequence Structure (LDDT on CAMEO)</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Model</th>
+                                    <th>LDDT</th>
+                                    <th>Context</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>ESM3 98B</td>
+                                    <td class="metric-value green">0.880</td>
+                                    <td>CAMEO test set; multimodal (seq+struct+func) [ESM3 p.4]</td>
+                                </tr>
+                                <tr>
+                                    <td>ESMFold</td>
+                                    <td class="metric-value blue">0.861</td>
+                                    <td>CAMEO; sequence-only; 6× faster than AF2 [ESM-2 p.6]</td>
+                                </tr>
+                                <tr>
+                                    <td>AlphaFold2 (single)</td>
+                                    <td class="metric-value">~0.86</td>
+                                    <td>Reference; uses MSA + templates</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--amber);">
+                            ⚠ ESM3 is multimodal (trained on sequence, structure, function); ESMFold and AF2 are sequence→structure. Not strictly comparable.
+                        </p>
+                    </div>
+                    <div>
+                        <h3>Secondary Structure (Q3 on CASP12)</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Model</th>
+                                    <th>Q3 Accuracy</th>
+                                    <th>Source</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>ProtT5-XL-U50</td>
+                                    <td class="metric-value green">81.4%</td>
+                                    <td>[ProtTrans p.9]</td>
+                                </tr>
+                                <tr>
+                                    <td>Ankh</td>
+                                    <td class="metric-value blue">83.8% ±3%</td>
+                                    <td>[Ankh Table 13]</td>
+                                </tr>
+                                <tr>
+                                    <td>ESM-2 (15B)</td>
+                                    <td class="metric-value">83.2% ±3%</td>
+                                    <td>[Ankh Table 13]</td>
+                                </tr>
+                                <tr>
+                                    <td>ProtBert-BFD</td>
+                                    <td class="metric-value">75.8%</td>
+                                    <td>[ProtTrans p.9]</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--amber);">
+                            ⚠ Ankh & ESM-2 from same benchmark (Ankh Table 13); ProtT5/ProtBert from ProtTrans compilation. Different eval protocols.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="key-point" style="max-width: 1000px; margin-top: 2rem;">
+                    <div>ESM3 98B achieves LDDT 0.880 on CAMEO, exceeding ESMFold (0.861) and single-model AF2 — but ESM3 is multimodal; ESMFold/AF2 are not. The comparison is informative but not controlled.</div>
+                </div>
+                
+                <div class="key-point" style="max-width: 1000px;">
+                    <div>ESMFold runs 6× faster than AlphaFold2 (14.2s for 384 residues on V100), enabling high-throughput structure prediction directly from sequence.</div>
+                </div>
+                
+                <div class="source">Sources: ESM3 p.4 (LDDT); ESM-2 p.6 (ESMFold speed); Ankh Table 13 (SSP CASP12); ProtTrans p.9 (Q3 benchmarks). Benchmark comparability caveats noted inline.</div>
+            </div>
+            
+            <!-- Slide 4: Agentic Loop -->
+            <div class="slide" data-slide="4">
+                <h2>Agentic Research Loop: Contact Prediction Case Study</h2>
+                <p>How evidence evaluation evolves when flagged data and benchmark incomparabilities are encountered.</p>
+                
+                <div style="width: 100%; max-width: 1100px; margin-top: 2rem;">
+                    <div class="loop-step hypothesis">
+                        <div class="loop-label">Hypothesis</div>
+                        <div class="loop-content">
+                            <h4>Ankh outperforms larger models on contact prediction</h4>
+                            <p>Initial claim: Ankh achieves 49% precision on ProteinNet L/1, beating ProtT5-XL-U50 (44.7%) and ESM-2 15B (33.3%) despite fewer parameters.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="loop-arrow">▼</div>
+                    
+                    <div class="loop-step evidence">
+                        <div class="loop-label">Evidence</div>
+                        <div class="loop-content">
+                            <h4>Ankh Table 13 reports 49.0% ±8% for Ankh</h4>
+                            <p>Source: Ankh paper Table 13, extracted as "49.0% Contact Prediction ProteinNet L/1 precision Ankh". Appears to support the hypothesis.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="loop-arrow">▼</div>
+                    
+                    <div class="loop-step contradiction">
+                        <div class="loop-label">Contradiction</div>
+                        <div class="loop-content">
+                            <h4>Source data flagged: "Table row text truncated in extraction"</h4>
+                            <p>The values.csv entry for this metric carries status="flagged" with note: "Table row text truncated in extraction; value 49.0 present in table". The Ankh paper itself may not have run all models under identical conditions — Table 13 may compile results from different experimental setups.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="loop-arrow">▼</div>
+                    
+                    <div class="loop-step revision">
+                        <div class="loop-label">Revision</div>
+                        <div class="loop-content">
+                            <h4>Withdraw comparative claim; treat as unverified</h4>
+                            <p>Cannot conclude Ankh > ProtT5 > ESM-2 for contact prediction. The 49% figure may be valid for Ankh alone, but cross-model comparison requires: (1) same benchmark split, (2) same evaluation protocol, (3) same sequence length limits. None verified. Flagged data must be excluded from comparative claims.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="key-point caution" style="max-width: 1000px; margin-top: 2rem;">
+                    <div><strong>Lesson:</strong> Benchmark tables in papers often aggregate results from heterogeneous sources. Always verify: same test set? same metric definition? same preprocessing? If extraction is flagged or provenance unclear, treat as hypothesis-generating only — not evidence for model ranking.</div>
+                </div>
+                
+                <div class="source">Agentic loop reconstructed from values.csv flagged entries and Ankh Table 13 extraction notes.</div>
+            </div>
+            
+            <!-- Slide 5: Novel Hypothesis & Proposed Experiment -->
+            <div class="slide" data-slide="5">
+                <h2>Novel Falsifiable Hypothesis & Proposed Experiment</h2>
+                <p>One testable research direction emerging from the evidence review.</p>
+                
+                <div class="hypothesis-box">
+                    <h3>Hypothesis (not a demonstrated result)</h3>
+                    <p class="hypothesis-text">
+                        "Intermediate-layer protein embeddings may recover functional relationships among divergent microbial proteins more effectively than final-layer embeddings, under matched evaluation conditions."
+                    </p>
+                </div>
+                
+                <p style="max-width: 1000px; margin: 1rem 0;">
+                    <strong>Rationale:</strong> Final layers in PLMs are optimized for the training objective (masked language modeling, next-token prediction). Intermediate layers may retain more generalizable evolutionary and structural signals — particularly for distant homologs where surface-level sequence similarity is low but functional constraints persist.
+                </p>
+                
+                <h3 style="margin-top: 2rem; color: var(--accent);">Proposed Experiment</h3>
+                <p style="max-width: 1000px;">Compare embedding layers and pooling strategies against sequence-based baselines on a curated microbial protein function benchmark.</p>
+                
+                <div class="experiment-grid">
+                    <div class="experiment-card">
+                        <h4>Models</h4>
+                        <ul>
+                            <li>ESM-2 (650M, 3B, 15B)</li>
+                            <li>All transformer layers</li>
+                        </ul>
+                    </div>
+                    <div class="experiment-card">
+                        <h4>Layer Selection</h4>
+                        <ul>
+                            <li>Final layer (baseline)</li>
+                            <li>Middle layer (e.g., layer 12/33)</li>
+                            <li>Early layer (e.g., layer 4/33)</li>
+                            <li>Layer-wise sweep</li>
+                        </ul>
+                    </div>
+                    <div class="experiment-card">
+                        <h4>Pooling</h4>
+                        <ul>
+                            <li>Mean pooling</li>
+                            <li>Max pooling</li>
+                            <li>CLS / first token</li>
+                            <li>Attention-weighted</li>
+                        </ul>
+                    </div>
+                    <div class="experiment-card">
+                        <h4>Sequence Baselines</h4>
+                        <ul>
+                            <li>BLASTP (E-value, %id)</li>
+                            <li>MMseqs2 (bit score)</li>
+                            <li>Profile-HMM (HMMER3)</li>
+                        </ul>
+                    </div>
+                    <div class="experiment-card">
+                        <h4>Evaluation</h4>
+                        <ul>
+                            <li>Microbial protein families</li>
+                            <li>Divergent pairs (<30% id)</li>
+                            <li>Function labels: EC, GO, Pfam</li>
+                            <li>Metrics: AUPRC, recall@k</li>
+                        </ul>
+                    </div>
+                    <div class="experiment-card">
+                        <h4>Controls</h4>
+                        <ul>
+                            <li>Matched sequence length</li>
+                            <li>Same test pairs for all methods</li>
+                            <li>Random embedding baseline</li>
+                            <li>Layer-shuffled control</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="key-point" style="max-width: 1000px; margin-top: 2rem;">
+                    <div><strong>Falsification criterion:</strong> If final-layer mean-pooled embeddings match or exceed all intermediate-layer/pooling combinations on AUPRC for divergent microbial protein pairs (≤30% sequence identity), the hypothesis is falsified.</div>
+                </div>
+                
+                <div class="key-point caution" style="max-width: 1000px;">
+                    <div><strong>Scope:</strong> This is a proposed experiment, not a result. No PLM layer-comparison study on divergent microbial proteins with these controls exists in the reviewed literature. The hypothesis is falsifiable and specific enough to preregister.</div>
+                </div>
+                
+                <div class="source">Hypothesis and experiment design synthesized from evidence gaps in PLM layer-wise analysis literature; not present in source documents.</div>
+            </div>
+            
+        </div>
+        
+        <div class="slide-number">
+            <span id="currentSlide">1</span> / 5
+        </div>
+        
+        <div class="nav-hint">
+            <kbd>←</kbd> <kbd>→</kbd> or <kbd>Space</kbd> to navigate
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progressBar');
+        const currentSlideEl = document.getElementById('currentSlide');
+        const slidesContainer = document.getElementById('slidesContainer');
+        let currentSlide = 0;
+        const totalSlides = slides.length;
+        
+        function updateSlide() {
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active', 'prev', 'next');
+                if (i === currentSlide) {
+                    slide.classList.add('active');
+                } else if (i === currentSlide - 1) {
+                    slide.classList.add('prev');
+                } else if (i === currentSlide + 1) {
+                    slide.classList.add('next');
+                } else if (i < currentSlide) {
+                    slide.classList.add('prev');
+                } else {
+                    slide.classList.add('next');
+                }
+            });
+            
+            const progress = ((currentSlide + 1) / totalSlides) * 100;
+            progressBar.style.width = progress + '%';
+            currentSlideEl.textContent = currentSlide + 1;
+        }
+        
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+        
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                currentSlide = 0;
+                updateSlide();
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                currentSlide = totalSlides - 1;
+                updateSlide();
+            }
+        });
+        
+        // Touch/swipe support
+        let touchStartX = 0;
+        slidesContainer.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+        }, { passive: true });
+        
+        slidesContainer.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].clientX;
+            const diff = touchStartX - touchEndX;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) nextSlide();
+                else prevSlide();
+            }
+        }, { passive: true });
+        
+        // Click on left/right third of screen
+        slidesContainer.addEventListener('click', (e) => {
+            const rect = slidesContainer.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const third = rect.width / 3;
+            if (clickX < third) prevSlide();
+            else if (clickX > 2 * third) nextSlide();
+        });
+        
+        updateSlide();
+    </script>
+</body>
+</html>

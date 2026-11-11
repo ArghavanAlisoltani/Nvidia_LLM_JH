@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Protein Language Models - Lesson 1: Amino Acid Sequences</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <h1>🧬 Protein Language Models</h1>
+    <nav class="breadcrumb">
+      <a href="index.html" class="active">1. Amino Acid Sequences</a>
+      <a href="embeddings.html">2. Protein Embeddings</a>
+      <a href="similarity.html">3. Cosine Similarity</a>
+      <a href="quiz.html">Quiz</a>
+      <a href="tutor.html">🤖 Socratic Tutor</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <section class="lesson-header">
+    <h2>Lesson 1: Amino Acid Sequences — The Language of Proteins</h2>
+    <p class="lesson-meta">📚 For beginner bioinformatics students | ⏱️ ~10 minutes</p>
+  </section>
+
+  <section class="content-card">
+    <h3>What Is a Protein?</h3>
+    <p>Proteins are the workhorses of the cell — they catalyze reactions, transport molecules, provide structure, and much more. Every protein is a chain of <strong>amino acids</strong> (also called <em>residues</em>).</p>
+    <p>There are <strong>20 standard amino acids</strong>, each with a unique chemical property. Think of them as an alphabet of 20 letters.</p>
+  </section>
+
+  <section class="content-card">
+    <h3>The 20-Letter Alphabet</h3>
+    <div class="aa-table-container">
+      <table class="aa-table" id="aa-table">
+        <thead>
+          <tr>
+            <th>1-Letter</th>
+            <th>3-Letter</th>
+            <th>Name</th>
+            <th>Property</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="caption">Table 1: The 20 standard amino acids. Properties: <span class="prop hydrophobic">Hydrophobic</span> <span class="prop polar">Polar</span> <span class="prop acidic">Acidic</span> <span class="prop basic">Basic</span></p>
+  </section>
+
+  <section class="content-card interactive">
+    <h3>🔬 Interactive: Explore a Real Protein Sequence</h3>
+    <p>Below is the human insulin sequence (51 amino acids). Click any amino acid to highlight all occurrences and see its properties.</p>
+    <div class="sequence-viewer" id="sequence-viewer"></div>
+    <div class="aa-info" id="aa-info" style="display:none;">
+      <h4>Selected: <span id="selected-aa-name"></span> (<span id="selected-aa-1letter"></span>)</h4>
+      <p id="selected-aa-desc"></p>
+      <p><strong>Positions in sequence:</strong> <span id="selected-positions"></span></p>
+      <p><strong>Count:</strong> <span id="selected-count"></span> out of 51 residues</p>
+    </div>
+  </section>
+
+  <section class="content-card">
+    <h3>Why Sequences Matter</h3>
+    <ul>
+      <li><strong>Sequence determines structure:</strong> The order of amino acids dictates how the protein folds into its 3D shape.</li>
+      <li><strong>Structure determines function:</strong> The 3D shape determines what the protein does.</li>
+      <li><strong>Evolution conserves sequences:</strong> Similar sequences often mean similar functions across species.</li>
+    </ul>
+    <div class="callout">
+      <strong>Key insight:</strong> Just as the order of letters determines the meaning of a word, the order of amino acids determines the function of a protein.
+    </div>
+  </section>
+
+  <section class="content-card">
+    <h3>🎯 Mini-Check</h3>
+    <div class="socratic" data-question="seq-1">
+      <p>Why can we represent a protein as a string of letters (like "MALWMRLLPLL...")?</p>
+    </div>
+    <div class="socratic" data-question="seq-2">
+      <p>If two proteins have 80% identical amino acid sequences, what might you predict about their structures and functions?</p>
+    </div>
+  </section>
+
+  <nav class="lesson-nav">
+    <a href="embeddings.html" class="btn btn-primary">Next: Protein Embeddings →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>Protein Language Models Tutorial | <a href="https://github.com/ArghavanAlisoltani/Nvidia_LLM_JH" target="_blank">GitHub Repository</a></p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+<script src="socratic.js" defer></script>
+<script>
+  // Lesson 1 specific questions
+  if (window.SocraticTutor) {
+    window.SocraticTutor.registerQuestions({
+      "seq-1": {
+        question: "Why can we represent a protein as a string of letters (like \"MALWMRLLPLL...\")?",
+        answer: "Each amino acid has a standard one-letter code (e.g., A=Alanine, L=Leucine). A protein is a linear polymer of amino acids, so its primary structure can be written as a string where each character represents one residue in order from N-terminus to C-terminus.",
+        misconceptions: ["That the letters represent atoms", "That the string shows 3D structure", "That all proteins use all 20 letters"]
+      },
+      "seq-2": {
+        question: "If two proteins have 80% identical amino acid sequences, what might you predict about their structures and functions?",
+        answer: "High sequence identity (80%) strongly suggests similar 3D structures and often similar functions. They are likely homologs — descended from a common ancestor. However, the remaining 20% difference could alter binding affinity, regulation, or localization.",
+        misconceptions: ["They must have identical functions", "Structure is completely determined by sequence alone", "Low identity means no relationship"]
+      }
+    });
+  }
+</script>

@@ -1,11 +1,80 @@
-Research question: How much is [A QUANTITY YOUR PAPERS REPORT, WITH ITS UNIT] under [THE CONDITIONS YOU CARE ABOUT], and why do the amounts reported in different studies differ?
+# NVIDIA workshop Stop 3 — Evidence-based comparison of protein language models
 
-Sources: my papers in mine/. Read a paper with `python 03_lit/pages.py <file>` (or one page: `python 03_lit/pages.py <file> <page>`). Quote only from that text, word for word, with its page number. Keep any script you write in results/, not among the tools in 03_lit/. For a value in a table, the quote is the table's line exactly as pages.py prints it.
+## Research question
+Across published protein language model (PLM) studies, does increasing model parameter count consistently improve downstream biological prediction? When it does not, can differences in training data, architecture, pretraining objective, pooling or representation selection, and benchmark design explain the discrepancies?
 
-1. Find every value these papers report for [THE QUANTITY]. Put each in results/values.csv, one row per value, with these columns: source, page, quote, value, unit, conditions, value_std, unit_std, conversion, status, note. Write it with Python's csv module, so that a field containing a comma is quoted and every row has exactly these eleven fields; page is a whole number. In conditions, record what the value depends on ([WHAT USUALLY CHANGES IT IN YOUR FIELD: temperature, material, sample, method, ...]). Choose one standard unit, fill in value_std and the conversion you used (arithmetic in v, such as v / 8) where a value can be converted, and leave value_std and conversion both empty where converting would mean inventing something (a value that cannot be converted is not a failure, so never flag a row for that).
+Do not presume either larger models or any specific model family wins. The goal is a critical, checkable literature synthesis, not a marketing ranking. A comparison is valid only when the task, dataset and evaluation conditions are meaningfully comparable.
 
-2. Run `python 03_lit/check_values.py` after every change to the file. When a row fails, reread that page and fix the row. Set status to flagged only when a row cannot be fixed, and say in note which check failed and why it cannot be fixed. Never delete a row to make the check pass.
+## Sources and scope
 
-3. Form a hypothesis for why the values differ (conditions, method, sample, or units that are not comparable). Test it against the rows: does it explain the spread, or not? Revise it if it does not. If my papers cannot settle it, search for more with `python 03_lit/lit.py "<query>"` (at most three searches: the whole room shares one search allowance) and use a paper's abstract as a source (source doi:<DOI>, page 0), with the same check. Run at least one search, so the search and its check are exercised once; any further search is your decision. The check writes results/sources.bib for every searched paper you use, with its DOI checked.
+Read **all accessible PLM PDFs currently in `mine/`**, prioritizing these five in order (the first three have already passed the workshop upload check):
 
-4. Stop when another search or another reading would not change your answer, and say why you stopped. Write results/answer.md: the range of values that can fairly be compared, your explanation and the rows that support it, the hypotheses you tested and rejected, and what is still unexplained. Every number in answer.md must be a row of values.csv that passes the check or is flagged.
+1. `mine/ankh.pdf` — Ankh
+2. `mine/esm2_esmf.pdf` — ESM-2 / ESMFold
+3. `mine/prottrans.pdf` — ProtTrans
+4. `mine/esm3.pdf` — ESM-3 (add from `literature_library/PLM/`)
+5. `mine/progen2.pdf` — ProGen2 (add from `literature_library/PLM/`)
+
+If available later, also include `mine/esm1b.pdf`, `mine/esmc.pdf`, `mine/saprot.pdf`, `mine/plmblast.pdf` and `mine/plmsearch.pdf`. Do **not** claim to have read these unless the actual PDF exists and is text-readable. Record missing papers and why they were excluded. Do not mix nucleotide models such as Evo 2, GenSLM or DNABERT-2 into direct protein benchmark rankings. They may be discussed separately as background.
+
+The PDF corpus is intentionally larger than the default two-to-three-paper workshop exercise. Work in manageable batches, inspecting the relevant model-description and results pages rather than pasting long PDFs into the conversation. `prottrans.pdf` is long and may require page-by-page reading.
+
+Use the workshop-provided tools without modifying them. Read each PDF with `python 03_lit/pages.py mine/<filename>.pdf`, or `python 03_lit/pages.py mine/<filename>.pdf <page>` for specific pages. Quotes must be copied **word for word** from the page text printed by that tool; record its exact page number. If a quoted result is in a table, use the table line exactly as printed. Write any extra code only in `results/`.
+
+## Hypotheses to test, not assume
+
+- **H1 (scaling):** More parameters alone do not consistently imply higher performance on comparable protein benchmarks.
+- **H2 (representation and training):** Dataset curation, architecture, pretraining objective, representation layer and pooling choice help explain differences, but the papers may not isolate their causal effects.
+- **H3 (benchmark validity):** Apparently contradictory scores may reflect different datasets, train/test partitions, sequence-identity filtering, task definitions, or metrics rather than model quality.
+
+Optional extension, **only if the relevant papers exist**: assess whether PLM-based remote-homology retrieval improves over BLAST/MMseqs2/HMMER under matched evaluation conditions. Use pLM-BLAST and PLMSearch if available. Do not report a superiority claim from unmatched experiments.
+
+## 1. Extract exact, auditable numerical evidence
+
+Write `results/values.csv`, **one row per distinct numerical finding**, using Python's `csv` module and exactly these eleven columns in this order:
+
+`source,page,quote,value,unit,conditions,value_std,unit_std,conversion,status,note`
+
+- `source`: the exact path, e.g. `mine/ankh.pdf`. For a paper found by `03_lit/lit.py`, use `doi:<DOI>` with page `0` **only** when quoting its verified abstract.
+- `page`: the page number as printed by `pages.py`, not a guessed journal page.
+- `quote`: exact source text containing the reported number; no invented or reconstructed quotations.
+- `value` and `unit`: the number and unit **as printed** (e.g. a model's parameter count, training corpus size, benchmark performance, inference cost).
+- `conditions`: name the model/checkpoint, task, benchmark dataset, split, metric, whether larger or smaller is better, method or comparator, and other critical evaluation details whenever reported.
+- `value_std`, `unit_std`, `conversion`: normalize values **only within the same kind of quantity**. For model parameter counts, choose `million parameters` as the standard unit (e.g. reported billions converted with `v * 1000`). For corpus sizes, state the denominator precisely (proteins, sequences, residues or tokens) and do not treat these as equivalent. For benchmark percentages or scores, preserve the reported metric and denominator; use `v` for an identity conversion only where meaningful. Leave `value_std` and `conversion` empty for nonconvertible values. Do not invent conversions between accuracy, F1, AUC, TM-score, contact precision, sequence identity or embedding cosine similarity.
+- `status`: `ok` or `flagged`. Explain any unresolvable failed check in `note`. Never delete a finding merely to obtain a passing check.
+
+Prioritize evidence in these categories: model/checkpoint parameter count, training-data size and source, architecture and objective, embedding or pooling strategy if tested, sequence length, matched benchmark results, baseline results, and available efficiency/memory measurements. Record qualitative methodological observations in `results/answer.md` with accurate source/page pointers. Do not fabricate a numerical row when a paper gives no relevant number.
+
+A numerical result is **not automatically comparable** just because its metric has the same name. Explicitly distinguish within-paper comparisons, matched cross-paper comparisons, and incomparable results.
+
+## 2. Run the independent checker
+
+After every CSV change, run:
+
+`python 03_lit/check_values.py`
+
+When a row fails, reread the relevant page and correct it. Use `flagged` only if it cannot be corrected, with a precise explanation. Never alter `03_lit/pages.py`, `03_lit/check_values.py`, or `03_lit/lit.py` to make evidence pass. A PASS proves the quote/number is traceable, **not** that the comparison or interpretation is valid.
+
+## 3. Investigate each hypothesis and challenge it
+
+- Construct comparisons **within a single benchmark** using the same task, split, metric, and evaluation protocol wherever possible. For each comparison, state which `values.csv` rows support it.
+- Separate observed associations from causal claims. Parameter count, training tokens, dataset quality, architecture, fine-tuning, pooled layer, and number of FLOPs may be confounded.
+- Explicitly look for counterexamples, negative results, missing controls and data leakage risks.
+- For each of H1–H3, give supporting findings, contradictory findings, and what cannot be concluded.
+- Run at least **one** literature search with `python 03_lit/lit.py "<targeted PLM benchmark query>"` so its DOI validation is exercised. At most **three** searches total, because the workshop room shares a search allowance. Use the verified abstract as `doi:<DOI>` page 0 only when it contains a numerical statement with an exact quote. A search result without sufficient evidence is a lead, not a quantitative finding.
+
+## 4. Required deliverables and stopping rule
+
+Write `results/answer.md` with the following sections:
+
+1. **Source coverage:** every PDF considered, which were readable, and which were unavailable.
+2. **Model inventory:** checkpoint name, parameters, training data, architecture/objective, and original paper/page; mark unreported information as unknown.
+3. **Evidence-backed benchmark table:** task, dataset, protocol, metric, source, reported score, and linked `values.csv` row(s). Mark unmatched comparisons as not comparable.
+4. **H1–H3 assessment:** supported, contradicted, mixed or insufficient evidence, with explicit evidence rows and counterexamples.
+5. **Scientific limitations:** different datasets, benchmarks, leakage controls, model sizes, pooling, compute budgets, and uncertainty in cross-study interpretation.
+6. **Next experiment for microbial protein annotation:** a proposal for a controlled, fixed-query/fixed-reference benchmark with BLASTP/MMseqs2/profile-HMM and several frozen PLM layers and pooling strategies. Present it as a *proposal*, not as results.
+7. **Why the search stopped:** explain what further evidence might materially change the answer.
+
+Do not type unverified numeric claims into `results/answer.md`; every scientific number stated must be backed by a `values.csv` row that the checker has accepted or explicitly flagged. Report missing evidence rather than guessing. Keep `mine/` PDFs and the workshop's raw tools unchanged.
+
+Finish by running `python 03_lit/check_values.py`, reporting PASS/FAIL/FLAGGED totals, and giving a short conclusion that reflects only the verified evidence.

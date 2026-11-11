@@ -78,3 +78,28 @@ Write `results/answer.md` with the following sections:
 Do not type unverified numeric claims into `results/answer.md`; every scientific number stated must be backed by a `values.csv` row that the checker has accepted or explicitly flagged. Report missing evidence rather than guessing. Keep `mine/` PDFs and the workshop's raw tools unchanged.
 
 Finish by running `python 03_lit/check_values.py`, reporting PASS/FAIL/FLAGGED totals, and giving a short conclusion that reflects only the verified evidence.
+
+## 5. Workshop demonstration: build a short presentation website from the verified research
+
+After completing the evidence-checking and hypothesis loop above, build a **five-slide scientific presentation** for the NVIDIA workshop audience. The aim is to explain the research question, what the agent tested and revised, what the papers actually support, and what controlled experiment would be needed for a future microbial protein annotation study. Do this as part of the same agent task, after producing the analysis outputs.
+
+Create a static, keyboard-navigable slideshow at **`site/plm-research/index.html`** using HTML/CSS/JavaScript with on-screen next/previous controls, readable scientific figures/tables, speaker notes (visible via a toggle), citations with links to the original publications, and a final source/evidence section. Design for a 3–5-minute live presentation. Make it attractive, responsive and accessible. Do not depend on a paid API, secret credentials, remote model endpoints, or dynamically generated responses.
+
+Slide outline:
+1. **Problem and question:** why PLM evaluation is difficult, and the specific hypothesis being tested.
+2. **Evidence base:** five accessible papers, model/checkpoint overview, and essential experimental distinctions.
+3. **Verified results:** a compact table or chart showing *only* metrics whose sources can be traced to `results/values.csv`; group non-comparable evaluations separately and label missing data explicitly.
+4. **Agentic reasoning loop:** initial competing hypotheses → evidence → contradictory findings → revised hypotheses; distinguish evidence from inference, and state the stopping rule.
+5. **Conclusion and proposed next experiment:** what the papers do and do not establish, then a clearly labeled *prospective* matched benchmark for divergent microbial proteins against BLASTP/MMseqs2/profile-HMM with frozen PLM embeddings, different layers and pooling choices.
+
+Website requirements:
+- Read `results/answer.md`, `results/hypothesis_log.md` and `results/values.csv` as the source of research claims. Create all three first if absent, retaining a backup of any prior outputs.
+- Do not invent model scores, parameter counts, comparative rankings, paper quotes, positive results or new experimental outcomes. Label hypotheses and prospective experiments as such.
+- Give each chart/table a link to its exact evidence row(s) and source/page reference. Exclude failed/unresolved evidence from positive claims. `FLAGGED` is *not* proof of validity.
+- Avoid publishing complete PDF content, private documents, raw data, proprietary information, secrets, or extensive quotations: **`site/` may be publicly visible** through the Codespace preview or automatic GitHub Pages deployment. `mine/` and `results/` remain outside Git and must not be copied wholesale to `site/`.
+- **Preserve the existing website** at `site/index.html` and its original lessons, tutor, scripts and styles. Put the presentation only under `site/plm-research/`. Add a navigation link on the homepage only if it can be done without damaging the existing lessons.
+- Use relative links and static assets that work both at the Codespace port 8000 preview and under the repository's GitHub Pages project path.
+- Test the slideshow navigation, missing-file handling, citations, charts and responsive layout. Run the independent checker one final time and make sure any claimed numerical results on the slides are traceable to `results/values.csv`.
+- Provide the local preview path `/plm-research/` and state explicitly whether publishing occurred. Do not call `publish-site.sh` or make a manual deployment without asking the user.
+
+Final response: report which hypothesis survived scrutiny (or that evidence is insufficient), how many distinct papers were analyzed, the independent check's PASS/FAIL/FLAGGED totals, which presentation files were created, and how to open the five slides. This task is complete only when both the scientific analysis and the slideshow have been checked.
